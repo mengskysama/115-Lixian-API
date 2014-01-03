@@ -15,10 +15,12 @@ class http_request:
             self.cookie = cookie
             self.header = headers_main
 
-    def post(self, uri, postdata = '', setcookie = False):
+    def post(self, uri, postdata = '', setcookie = False, referer = None):
         header = self.header
         header.update(headers_post)
         header.update({'Cookie' : self.cookie})
+        if not referer == None:
+            header.update({'Referer' : referer})
         try:
             req = urllib2.Request('%s' % uri, postdata, header)
             fd = urllib2.urlopen(req)
@@ -38,13 +40,18 @@ class http_request:
             resp = {'status' : 600}
             return resp, ''
 
-    def get(self, uri):
+    def get(self, uri, setcookie = False):
         header = self.header
         header.update({'Cookie' : self.cookie})
         try:
             req = urllib2.Request('%s' % uri, headers = header)
             fd = urllib2.urlopen(req)
             content = fd.read()
+            if setcookie:
+                self.cookie = ''
+                #虽然不能很好...但是能用
+                for i in range(0, len(fd.headers["Set-cookie"])):
+                    self.cookie += fd.headers["Set-cookie"][i].replace(',', ';')
             resp = fd.headers
             resp = {'status' : 200}
             return resp, content

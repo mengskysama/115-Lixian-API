@@ -8,14 +8,18 @@ import random
 import string
 import os
 from urllib import urlencode
+from urllib import quote
 import MultipartPostHandler, urllib2, cookielib
 from hashlib import sha1
 
 from http_request import http_request
+import mail_pop3
 
 BT_API_URL = 'http://btapi.115.com'
 BASE_URL = 'http://115.com'
-LOGIN_URL = 'http://passport.115.com/?ct=login&ac=ajax&is_ssl=1'
+PASSPORT_URL = 'http://passport.115.com'
+LOGIN_URL = PASSPORT_URL + '/?ct=login&ac=ajax&is_ssl=1'
+
 class u115_api:
 
     def __init__(self):
@@ -41,6 +45,76 @@ class u115_api:
         else:
             print '115登陆成功'
             self.get_uid()
+
+    def siginup(self, email, email_pwd, passwd):
+        get_url = BASE_URL
+        resp, ret = self.http.get(get_url)
+        if not resp['status'] == 200:
+            print 'get_sign失败:请求失败'
+            return
+        #从页面中获取几个参数
+        reg = re.compile('\\[\'auth\'\\] = \'(\S+)\'')
+        ids = re.findall(reg, ret)
+        if len(ids) == 0:
+            print '获取atuh失败:似乎没有找到atuh'
+            return
+        auth = quote(str(ids[0]))
+        #从页面中获取几个参数
+        reg = re.compile('bridgeUrl:"(\S+)"')
+        ids = re.findall(reg, ret)
+        if len(ids) == 0:
+            print '获取bridgeurl失败:似乎没有找到bridgeurl'
+            return
+        bridgeurl = str(ids[0])
+        #获取验证码
+        resp, ret = self.http.get(PASSPORT_URL + '/?ct=securimage&ac=email', setcookie = True)
+        if not resp['status'] == 200:
+            print '获取验证码失败:请求失败'
+            return
+        file = open('code.png', 'wb')
+        file.write(ret)
+        file.close()
+
+        vocode = raw_input("请输入code.png验证码:\n")
+
+        bridgeurl = bridgeurl + '?ajax_cb_key=bridge_bridge_1388735845341'
+        resp, ret = self.http.get(bridgeurl)
+        if not resp['status'] == 200:
+            print '注册失败:请求失败'
+            return
+
+        postdata = 'type=email&email=%s&passwd=%s&code=%s&auth=%s' % (email, passwd, vocode, auth)
+        print bridgeurl
+        resp, ret = self.http.post(uri = PASSPORT_URL + '/?ct=register&ac=create&is_ajax=1&mini=n&goto=http%3A%2F%2F115.com', postdata = postdata, referer = bridgeurl)
+        if not resp['status'] == 200:
+            print '注册失败:请求失败'
+            return
+
+        ret = json.loads(ret)
+        if ret['state'] == True:
+            print '注册成功:等待验证'
+        else:
+            if ret.has_key('err_msg'):
+                print postdata
+                print '注册失败:%s' % ret['err_msg'].encode('utf-8')
+                return
+        #准备收取邮件
+        time.sleep(2)
+        trytime = 3
+        while(trytime>0):
+            ret = mail_pop3.check_mail_url(email, email_pwd)
+            if ret == None:
+                print '3秒后重试...'
+                trytime = trytime - 1
+                time.sleep(3)
+            else:
+                break
+
+        resp, ret = self.http.get(ret)
+        if not resp['status'] == 200:
+            print '访问激活地址失败:请求失败'
+            return
+        print '注册成功: 帐号:%s 密码:%s' % (email, passwd)
 
     def get_uid(self):
         resp, ret = self.http.get(BASE_URL)
@@ -268,7 +342,7 @@ class u115_api:
 
 if __name__ == "__main__":
      u115 = u115_api()
-     u115.login('131000000000', '123456')
+     #u115.login('131000000000', '123456')
      #print u115.ret_current_bt_task_count()
      #u115.print_bt_task_info()
      #u115.upload_torrent('D:\\code\\python\\NexusPHPSpider\\torrents\\1.torrent')
