@@ -1,31 +1,97 @@
-115 离线 API
-=============
-115网盘离线下载API
-注意:非会员每月离线下载配额限制30个还是多少来着
-
-包含以下接口
------------
-web登陆网盘
-通过种子添加任务
-离线任务管理
--队列管理
---自动清理已完成任务
---自动清理失败任务
---自动制作分享礼包
-
-不包含以下接口(因为我暂时用不着)
------------
--文件管理
--文件下载
-
-作用
------------
-爬一些资源站比如nyaa.se
-
-副作用
------------
-够115喝上一壶23333
-
-为什么某些PT站点没有速度
------------
-因为Ban掉了115的IP,需要进行trakcer转发可以参考https://github.com/mengskysama/BaiduDL-X-NexusPHP
+<div>
+    <div>
+        115 离线 API
+    </div>
+    <div>
+        =============
+    </div>
+    <div>
+        115网盘离线下载API
+    </div>
+    <div>
+        注意:目前只有会员才能使用离线功能</div>
+    <div>
+        <br>
+    </div>
+    <div>
+        包含以下接口
+    </div>
+    <div>
+        -----------
+    </div>
+    <div>
+        web登陆网盘
+    </div>
+    <div>
+        通过种子添加任务
+    </div>
+    <div>
+        离线任务管理
+    </div>
+    <div>
+        -队列管理
+    </div>
+    <div>
+        --自动清理已完成任务
+    </div>
+    <div>
+        --自动清理失败任务
+    </div>
+    <div>
+        --自动制作分享礼包
+    </div>
+    <div>
+        <br>
+    </div>
+    <div>
+        不包含以下接口(因为我暂时用不着)
+    </div>
+    <div>
+        -----------
+    </div>
+    <div>
+        -文件管理
+    </div>
+    <div>
+        -文件下载
+    </div>
+    <div>
+        <br>
+    </div>
+    <div>
+        作用
+    </div>
+    <div>
+        -----------
+    </div>
+    <div>
+        爬一些资源站比如nyaa.se
+    </div>
+    <div>
+        <br>
+    </div>
+    <div>
+        副作用
+    </div>
+    <div>
+        -----------
+    </div>
+    <div>
+        够115喝上一壶23333
+    </div>
+    <div>
+        <br>
+    </div>
+    <div>
+        为什么PT站点没有速度
+    </div>
+    <div>
+        -----------
+    </div>
+    <div>
+        115更换了客户端,目前不推荐这么做,现在客户端会一直报告一个即将完成的进度,不报告上传下载,需要进行trakcer转发可以参考https://github.com/mengskysama/BaiduDL-X-NexusPHP
+        <span id="_editor_bookmark_start_0" style="display: none; line-height: 0px;">
+            ‍
+        </span>
+    </div>
+</div>

@@ -144,33 +144,13 @@ class u115_api:
 
     def get_bt_task_list(self):
         '''
-        "status": -2完成 0转移
-        "status": 4,正在找资源
+        "status": 2完成
+        "status": 4,正在找资源，-1失败
         "percentDone": 7.57,完成率
-        {
-    {
-        "show": "all",
-        "torrents": [
-            {
-                "info_hash": "2810f36ee5c62fb96d0aa606bcb51758b9ddd244",
-                "add_time": 1380994493,
-                "percentDone": 100,
-                "size": 226228065,
-                "peers": 0,
-                "rateDownload": 0,
-                "torrent_name": "[KTXP][Mushi_Bugyou][26][720P][BIG5].mp4",
-                "last_update": 1380898960,
-                "status": -2,
-                "move": 1,
-                "file_id": "91823621349291204",下载完成后
-                "left_time": 0
-            },
-            {
-                "info_hash": "0b77985699f34fa2dacfa6ce0662fe0624c4fb14",
         '''
         self.get_sign()
 
-        post_url = BT_API_URL +  '/task/list'
+        post_url = BASE_URL + '/lixian/?ct=lixian&ac=task_lists'
         torrents = []
         current_page = 1
         page_count = 1
@@ -184,19 +164,20 @@ class u115_api:
             ret = json.loads(ret)
             if ret.has_key('page_count'):
                 page_count = ret['page_count']
-            if ret.has_key('torrents'):
-                torrents.extend(ret['torrents'])
+            if ret.has_key('tasks'):
+                torrents.extend(ret['tasks'])
             current_page += 1
         self.torrents = torrents
 
     def ret_current_bt_task_count(self, refresh = True):
+        #非完成状态都算在活动内
         count = 0
         if refresh:
             self.get_bt_task_list()
         if self.torrents == None:
             return 999
         for i in range(0, len(self.torrents)):
-            if self.torrents[i]['status'] == -1:
+            if self.torrents[i]['status'] == 2:
                 continue
             #if self.torrents[i]['file_id'] == None:
             count = count + 1
@@ -214,7 +195,7 @@ class u115_api:
 
         torrent_file_name = os.path.basename(torrent_file_path)
         #模拟flash提交插件把种子传上去
-        post_url = BT_API_URL +  '/task/torrent'
+        post_url = BT_API_URL + '/task/torrent'
         params = { 'Filename' : torrent_file_name, 'time' : self.time, 'sign' : self.sign, 'uid' : self.uid, 'torrent' : open(torrent_file_path, 'rb'), 'Upload' : 'Submit Query'}
         cookies = cookielib.CookieJar()
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies), MultipartPostHandler.MultipartPostHandler)
@@ -272,8 +253,8 @@ class u115_api:
         for i in range(0, len(self.torrents)):
             if self.torrents[i]['status'] == -1:
                 continue
-            if self.torrents[i]['file_id'] == None:
-                print '任务:%120s  进度:%8s  速度:%10dKB/s  种子:%5s  体积: %5.2f    散列值:%40s' % (self.torrents[i]['torrent_name'].encode('utf-8'), str(self.torrents[i]['percentDone']), self.torrents[i]['rateDownload']/1024.0, str(self.torrents[i]['peers']), self.torrents[i]['size']/1024.0/1024.0/1024.0, self.torrents[i]['info_hash'].encode('utf-8'))
+            if self.torrents[i]['file_id'] != None:
+                print '任务:%120s  进度:%8s  速度:%10dKB/s  种子:%5s  体积: %5.2f    散列值:%40s' % (self.torrents[i]['name'].encode('utf-8'), str(self.torrents[i]['percentDone']), self.torrents[i]['rateDownload']/1024.0, str(self.torrents[i]['peers']), self.torrents[i]['size']/1024.0/1024.0/1024.0, self.torrents[i]['info_hash'].encode('utf-8'))
                 total_rateDownload += self.torrents[i]['rateDownload']/1024.0
         print '---------------------------------总速度:%5.2f MB/s' % (total_rateDownload/1024.0)
 
@@ -288,15 +269,14 @@ class u115_api:
             return
         for i in range(0, len(self.torrents)):
             if self.torrents[i]['status'] == -1:
-                post_url = BT_API_URL + '/task/del'
+                post_url = BASE_URL + '/task/del'
                 post_data = 'hash%%5B0%%5D=%s&uid=%s&sign=%s&time=%s' % (self.torrents[i]['info_hash'].encode('utf-8'), self.uid, self.sign, self.time)
                 self.http.post(post_url, post_data)
                 print '删除失败的任务:%s' % self.torrents[i]['info_hash']
                 continue
-            #if self.torrents[i]['file_id'] != None and (self.torrents[i]['status'] == -2 or (self.torrents[i]['status'] == 0 and self.torrents[i]['percentDone'] == 100)):
-            if self.torrents[i]['file_id'] != None and self.torrents[i]['status'] == -2:
+            if self.torrents[i]['status'] == 2 and self.torrents[i]['file_id'] != None and self.torrents[i]['file_id'] != '':
                 cid = str(self.torrents[i]['file_id'])
-                torrent_name = '%s' % self.torrents[i]['torrent_name'].encode('utf-8')
+                torrent_name = '%s' % self.torrents[i]['name'].encode('utf-8')
                 get_url = 'http://web.api.115.com/category/get?aid=1&cid=%s' % cid
                 resp, ret = self.http.get(get_url)#sometime has bom
                 if not resp['status'] == 200:
@@ -307,7 +287,9 @@ class u115_api:
                     print '分享失败:未找到pick_code'
                     continue
                 #此时有bom.....................
-                ret = ret[3:]
+                #ret = ret[3:]
+                #妈蛋你们搞来搞去是闹哪样
+                print ret
                 ret = json.loads(ret)
                 pick_code = ret['pick_code']
                 #创建礼包
@@ -335,7 +317,7 @@ class u115_api:
                 #将gift_code更新入数据库中
                 #get_url = config.MY_DATAQUERY_URL + '&type=update_gift_code' + '&gift_code=' + gift_code + '&torrent_info_hash=' + self.torrents[i]['info_hash']
                 #115从完成列表中删除
-                post_url = BT_API_URL + '/task/del'
+                post_url = BASE_URL + '/task/del'
                 post_data = 'hash%%5B0%%5D=%s&uid=%s&sign=%s&time=%s' % (self.torrents[i]['info_hash'].encode('utf-8'), self.uid, self.sign, self.time)
                 self.http.post(post_url, post_data)
                 print '删除完成任务:Code=%s Hash=%s Name=%s' % (gift_code.encode('utf-8'), self.torrents[i]['info_hash'].encode('utf-8'), torrent_name)
