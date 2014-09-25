@@ -4,64 +4,52 @@
 import urllib2
 from urllib2 import HTTPError
 
-headers_main = {'User-Agent': 'Mozilla/5.0'}
-headers_post = {'Content-Type': 'application/x-www-form-urlencoded'}
+import requests
 
 urllib2.socket.setdefaulttimeout(60)
 
 class http_request:
 
-    def __init__(self, cookie = ''):
-            self.cookie = cookie
-            self.header = headers_main
+    def __init__(self, cookie=None):
+        self.set_cookie = None
+        self.cookies = requests.cookies.RequestsCookieJar()
 
-    def post(self, uri, postdata = '', setcookie = False, referer = None):
-        header = self.header
-        header.update(headers_post)
-        header.update({'Cookie' : self.cookie})
-        if not referer == None:
-            header.update({'Referer' : referer})
+    def post(self, url, body=None):
         try:
-            req = urllib2.Request('%s' % uri, postdata, header)
-            fd = urllib2.urlopen(req)
-            content = fd.read()
-            if setcookie:
-                self.cookie = ''
-                #虽然不能很好...但是能用
-                for i in range(0, len(fd.headers["Set-cookie"])):
-                    self.cookie += fd.headers["Set-cookie"][i].replace(',', ';')
-            resp = {'status' : 200}
-            return resp, content
-        except HTTPError, e:
-            resp = {'status' : e.code}
-            return resp, ''
+            r = requests.post(url=url, data=body, cookies=self.cookies)
+            resp = {'status': r.status_code}
+            content = r.text
+            for c in r.cookies:
+                self.cookies.set_cookie(c)
         except Exception, e:
-            import traceback; traceback.print_exc()
-            resp = {'status' : 600}
-            return resp, ''
+            resp = {'status': 600}
+            content = 'HttpHelper: %s' % e
+        return resp, content
 
-    def get(self, uri, setcookie = False):
-        header = self.header
-        header.update({'Cookie' : self.cookie})
+    def upload(self, url, files):
         try:
-            req = urllib2.Request('%s' % uri, headers = header)
-            fd = urllib2.urlopen(req)
-            content = fd.read()
-            if setcookie:
-                self.cookie = ''
-                #虽然不能很好...但是能用
-                for i in range(0, len(fd.headers["Set-cookie"])):
-                    self.cookie += fd.headers["Set-cookie"][i].replace(',', ';')
-            resp = fd.headers
-            resp = {'status' : 200}
-            return resp, content
-        except HTTPError, e:
-            resp = {'status' : e.code}
-            return resp, ''
+            headers = {'User-Agent': 'Shockwave Flash'}
+            r = requests.post(url=url, files=files, cookies=self.cookies, headers=headers)
+            resp = {'status': r.status_code}
+            content = r.text
+            for c in r.cookies:
+                self.cookies.set_cookie(c)
         except Exception, e:
-            import traceback; traceback.print_exc()
-            resp = {'status' : 600}
-            return resp, ''
+            resp = {'status': 600}
+            content = 'HttpHelper: %s' % e
+        return resp, content
+
+    def get(self, url, _headers=None):
+        try:
+            r = requests.get(url=url, cookies=self.cookies)
+            resp = {'status': r.status_code}
+            content = r.text
+            for c in r.cookies:
+                self.cookies.set_cookie(c)
+        except Exception, e:
+            resp = {'status': 600}
+            content = 'HttpHelper: %s' % e
+        return resp, content
 
 if __name__ == "__main__":
     http = http_request()
