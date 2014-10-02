@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import urllib2
-from urllib2 import HTTPError
-
 import requests
-
-urllib2.socket.setdefaulttimeout(60)
 
 class http_request:
 
@@ -16,7 +11,7 @@ class http_request:
 
     def post(self, url, body=None):
         try:
-            r = requests.post(url=url, data=body, cookies=self.cookies)
+            r = requests.post(url=url, data=body, cookies=self.cookies, timeout=10.0)
             resp = {'status': r.status_code}
             content = r.text
             for c in r.cookies:
@@ -29,7 +24,7 @@ class http_request:
     def upload(self, url, files):
         try:
             headers = {'User-Agent': 'Shockwave Flash'}
-            r = requests.post(url=url, files=files, cookies=self.cookies, headers=headers)
+            r = requests.post(url=url, files=files, cookies=self.cookies, headers=headers, timeout=60.0)
             resp = {'status': r.status_code}
             content = r.text
             for c in r.cookies:
@@ -41,7 +36,7 @@ class http_request:
 
     def get(self, url, _headers=None):
         try:
-            r = requests.get(url=url, cookies=self.cookies)
+            r = requests.get(url=url, cookies=self.cookies, timeout=10.0)
             resp = {'status': r.status_code}
             content = r.text
             for c in r.cookies:
