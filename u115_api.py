@@ -13,7 +13,6 @@ from urllib import quote
 from hashlib import sha1
 
 from http_request import http_request
-import mail_pop3
 
 BT_API_URL = 'http://btapi.115.com'
 UPLOAD_URL = 'http://upload.115.com'
@@ -37,7 +36,8 @@ class u115_api:
     def login(self, username, password):
         #这混蛋115也是存密码明文
         #好吧,我们也来生成一个key
-        key = string.join(random.sample(['a','b','c','d','e','f','0','1','2','3','4','5','6','7','8','9'], 13)).replace(' ', '')
+        key = string.join(random.sample(['a', 'b', 'c', 'd', 'e', 'f', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+                                        , 13)).replace(' ', '')
         vcode = key.upper()
         password = sha1(sha1(sha1(password).hexdigest() + sha1(username).hexdigest()).hexdigest() + vcode).hexdigest()
         data = {'login[ssoent]': 'B1',
@@ -64,74 +64,7 @@ class u115_api:
             return True
 
     def siginup(self, email, email_pwd, passwd):
-        get_url = BASE_URL
-        resp, ret = self.http.get(get_url)
-        if not resp['status'] == 200:
-            print 'get_sign失败:请求失败'
-            return
-        #从页面中获取几个参数
-        reg = re.compile('\\[\'auth\'\\] = \'(\S+)\'')
-        ids = re.findall(reg, ret)
-        if len(ids) == 0:
-            print '获取atuh失败:似乎没有找到atuh'
-            return
-        auth = quote(str(ids[0]))
-        #从页面中获取几个参数
-        reg = re.compile('bridgeUrl:"(\S+)"')
-        ids = re.findall(reg, ret)
-        if len(ids) == 0:
-            print '获取bridgeurl失败:似乎没有找到bridgeurl'
-            return
-        bridgeurl = str(ids[0])
-        #获取验证码
-        resp, ret = self.http.get(PASSPORT_URL + '/?ct=securimage&ac=email')
-        if not resp['status'] == 200:
-            print '获取验证码失败:请求失败'
-            return
-        file = open('code.png', 'wb')
-        file.write(ret)
-        file.close()
-
-        vocode = raw_input("请输入code.png验证码:\n")
-
-        bridgeurl += '?ajax_cb_key=bridge_bridge_1388735845341'
-        resp, ret = self.http.get(bridgeurl)
-        if not resp['status'] == 200:
-            print '注册失败:请求失败'
-            return
-
-        postdata = 'type=email&email=%s&passwd=%s&code=%s&auth=%s' % (email, passwd, vocode, auth)
-        print bridgeurl
-        resp, ret = self.http.post(uri=PASSPORT_URL + '/?ct=register&ac=create&is_ajax=1&mini=n&goto=http%3A%2F%2F115.com', postdata = postdata, referer = bridgeurl)
-        if not resp['status'] == 200:
-            print '注册失败:请求失败'
-            return
-
-        ret = json.loads(ret)
-        if ret['state'] is True:
-            print '注册成功:等待验证'
-        else:
-            if ret.has_key('err_msg'):
-                print postdata
-                print '注册失败:%s' % ret['err_msg'].encode('utf-8')
-                return
-        #准备收取邮件
-        time.sleep(2)
-        trytime = 3
-        while trytime > 0:
-            ret = mail_pop3.check_mail_url(email, email_pwd)
-            if ret is None:
-                print '3秒后重试...'
-                trytime -= 1
-                time.sleep(3)
-            else:
-                break
-
-        resp, ret = self.http.get(ret)
-        if not resp['status'] == 200:
-            print '访问激活地址失败:请求失败'
-            return
-        print '注册成功: 帐号:%s 密码:%s' % (email, passwd)
+        """已经变更为手机注册"""
 
     def get_uid(self):
         resp, ret = self.http.get(BASE_URL)
@@ -148,7 +81,7 @@ class u115_api:
 
     def get_sign(self):
         get_url = BASE_URL + '/?ct=offline&ac=space&_=' + str(time.time())
-        print get_url
+        #print get_url
         resp, ret = self.http.get(get_url)
         if not resp['status'] == 200:
             print 'get_sign失败:请求失败'
@@ -180,8 +113,8 @@ class u115_api:
                 self.torrents = None
                 print '获取列表失败:请求失败'
                 return
+            #print ret
             ret = json.loads(ret)
-            print ret
             if 'page_count' in ret:
                 page_count = ret['page_count']
             if 'tasks' in ret and ret['tasks'] is not None:
@@ -204,7 +137,7 @@ class u115_api:
         return count
 
 
-    def upload_torrent(self, torrent_file_path):
+    def add_torrent_task(self, torrent_file_path):
         '''
             这个接口简直屌炸天了有没有................
         '''
@@ -291,7 +224,7 @@ class u115_api:
         ret = json.loads(ret)
         if 'error_msg' in ret:
             print ret['error_msg']
-            return True
+            return False
 
         print '任务 torrent=%s 提交成功' % torrent_file_name
         return True
@@ -306,11 +239,42 @@ class u115_api:
         total_ratedownload = 0
         for i in range(0, len(self.torrents)):
             if self.torrents[i]['status'] == -1:
-                continue
+                status = '已失败'
+            elif self.torrents[i]['status'] == 2:
+                status = '已完成'
+                if self.torrents[i]['move'] == 0:
+                    status = '转储中'
+            else:
+                status = '下载中'
             if self.torrents[i]['file_id'] is not None:
-                print '任务:%120s  进度:%8s  速度:%10dKB/s  种子:%5s  体积: %5.2f    散列值:%40s' % (self.torrents[i]['name'].encode('utf-8'), str(self.torrents[i]['percentDone']), self.torrents[i]['rateDownload']/1024.0, str(self.torrents[i]['peers']), self.torrents[i]['size']/1024.0/1024.0/1024.0, self.torrents[i]['info_hash'].encode('utf-8'))
+                print '任务[%s]:%120s  进度:%8s  速度:%10dKB/s  种子:%5s  体积: %5.2f    散列值:%40s' \
+                      % (status,
+                         self.torrents[i]['name'].encode('utf-8'), str(self.torrents[i]['percentDone']),
+                         self.torrents[i]['rateDownload']/1024.0, str(self.torrents[i]['peers']),
+                         self.torrents[i]['size']/1024.0/1024.0/1024.0, self.torrents[i]['info_hash'].encode('utf-8'))
                 total_ratedownload += self.torrents[i]['rateDownload']/1024.0
         print '---------------------------------总速度:%5.2f MB/s' % (total_ratedownload/1024.0)
+
+    def add_http_task(self, url):
+        self.get_sign()
+        post_url = BASE_URL + '/lixian/?ct=lixian&ac=add_task_url'
+        post_data = {'url': url.encode('utf-8'),
+                     'uid': self.uid,
+                     'sign': self.sign,
+                     'time': self.time}
+        resp, ret = self.http.post(post_url, post_data)
+        if not resp['status'] == 200:
+            print '任务添加失败:请求失败'
+            return False
+        ret = json.loads(ret)
+        if ret['state'] is False:
+            if 'error_msg' in ret:
+                print ret['error_msg']
+                return False
+            print '任务添加失败'
+            return False
+        print '任务 url=%s 提交成功' % url
+        return True
 
     def auto_make_share_link(self, refresh=True):
      #自动将完成任务生成网盘礼包
@@ -382,8 +346,9 @@ class u115_api:
 
 if __name__ == "__main__":
     u115 = u115_api()
-    u115.login('13125185000', '000000')
-    print u115.ret_current_bt_task_count()
-    u115.print_bt_task_info()
-    u115.upload_torrent('2.torrent')
-    u115.auto_make_share_link()
+    u115.login('13125180000', '000000')
+    #print u115.ret_current_bt_task_count()
+    #u115.print_bt_task_info()
+    #u115.add_http_task('http://115.com/?tab=offline&mode=wangpan')
+    #u115.add_torrent_task('2.torrent')
+    #u115.auto_make_share_link()
