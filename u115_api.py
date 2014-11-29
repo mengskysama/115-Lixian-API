@@ -54,14 +54,14 @@ class u115_api:
                 'login[goto]': 'http://www.115.com/'}
         resp, ret = self.http.post(LOGIN_URL, data)
         if not resp['status'] == 200:
-            logging.error('115登陆失败:请求失败')
+            logging.error('115登陆失败:请求失败'.decode('utf-8'))
             return False
         ret = json.loads(ret)
         if 'err_msg' in ret:
-            logging.error('115登陆失败:%s' % ret['err_msg'].encode('utf-8'))
+            logging.error(('115登陆失败:%s' % ret['err_msg'].encode('utf-8')).decode('utf-8'))
             return False
         else:
-            logging.info('115登陆成功')
+            logging.info('115登陆成功'.decode('utf-8'))
             self.get_uid()
             return True
 
@@ -71,26 +71,26 @@ class u115_api:
     def get_uid(self):
         resp, ret = self.http.get(BASE_URL)
         if not resp['status'] == 200:
-            logging.error('获取用户id失败:请求失败')
+            logging.error('获取用户id失败:请求失败'.decode('utf-8'))
             return
         reg = re.compile('USER_ID = \'(\d+)')
         ids = re.findall(reg, ret)
         if len(ids) == 0:
-            logging.error('获取用户id失败:似乎没有找到id')
+            logging.error('获取用户id失败:似乎没有找到id'.decode('utf-8'))
             return
         self.uid = str(ids[0])
-        logging.info('用户id:%s' % self.uid)
+        logging.info(('用户id:%s' % self.uid).decode('utf-8'))
 
     def get_sign(self):
         get_url = BASE_URL + '/?ct=offline&ac=space&_=' + str(time.time())
         #print get_url
         resp, ret = self.http.get(get_url)
         if not resp['status'] == 200:
-            logging.error('get_sign失败:请求失败')
+            logging.error('get_sign失败:请求失败'.decode('utf-8'))
             return
         ret = json.loads(ret)
         if ret.has_key('error_msg'):
-            logging.error('get_sign失败:%s' % ret['error_msg'].encode('utf-8'))
+            logging.error(('get_sign失败:%s' % ret['error_msg'].encode('utf-8')).decode('utf-8'))
             return
         else:
             self.sign = str(ret['sign'])
@@ -113,7 +113,7 @@ class u115_api:
             resp, ret = self.http.post(post_url, data)
             if not resp['status'] == 200:
                 self.torrents = None
-                logging.error('获取列表失败:请求失败')
+                logging.error('获取列表失败:请求失败'.decode('utf-8'))
                 return
             #print ret
             ret = json.loads(ret)
@@ -158,7 +158,7 @@ class u115_api:
         reg = re.compile('upload\?(\S+?)"')
         ids = re.findall(reg, ret)
         if ids == 0:
-            logging.error('没有找到上传入口')
+            logging.error('没有找到上传入口'.decode('utf-8'))
             return False
         url = 'http://upload.115.com/upload?' + ids[0]
         #step.3
@@ -172,7 +172,7 @@ class u115_api:
         #{"state":true,"data":{"cid":138235783244134093,"aid":1,"file_name":"ea97783ca86b4ec4b409e8c766e3feff8848c7d7.torrent","file_ptime":1411607247,"file_status":1,"file_id":"348892672322418456","file_size":21309,"pick_code":"ewu87sytxapt7zwyi","sp":1}}
         ret = json.loads(ret)
         if 'state' is False:
-            logging.error('上传种子step.3出错 %s!' % str(ret))
+            logging.error(('上传种子step.3出错 %s!' % str(ret)).decode('utf-8'))
             return False
         #step.4
         #还要传一个地方..
@@ -183,7 +183,7 @@ class u115_api:
         print ret
         #返回{"data":[{"file_id":"348892672322418456","file_name":"ea97783ca86b4ec4b409e8c766e3feff8848c7d7.torrent","pick_code":"ewu87sytxapt7zwyi","sha1":"C72830D1D4C559E553A1A1074A8FC33D3D1F1336"}],"state":true,"error":"","errNo":0}
         if ret['state'] is False:
-            logging.error('上传种子step.4出错 %s!' % str(ret))
+            logging.error(('上传种子step.4出错 %s!' % str(ret)).decode('utf-8'))
             return False
         #step.5
         #获取服务器解析结果
@@ -200,7 +200,7 @@ class u115_api:
         #success
         #{"file_size":2201795620,"torrent_name":"[KTXP][RE Hamatora][01-12][BIG5][720p][MP4]","file_count":23,"info_hash":"d62d53175e0367a4e99fa464665d11ea1a666de0","torrent_filelist_web":[{"size":192359446,"path":"[KTXP][RE Hamatora][01][BIG5][720p][MP4].mp4","wanted":1},{"size":54250,"path":"_____padding_file_0_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":207823616,"path":"[KTXP][RE Hamatora][02][BIG5][720p][MP4].mp4","wanted":1},{"size":318720,"path":"_____padding_file_1_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":211146572,"path":"[KTXP][RE Hamatora][03][BIG5][720p][MP4].mp4","wanted":1},{"size":141492,"path":"_____padding_file_2_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":188201661,"path":"[KTXP][RE Hamatora][04][BIG5][720p][MP4].mp4","wanted":1},{"size":17731,"path":"_____padding_file_3_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":179834914,"path":"[KTXP][RE Hamatora][05][BIG5][720p][MP4].mp4","wanted":1},{"size":520158,"path":"_____padding_file_4_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":181628715,"path":"[KTXP][RE Hamatora][06][BIG5][720p][MP4].mp4","wanted":1},{"size":299221,"path":"_____padding_file_5_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":174835936,"path":"[KTXP][RE Hamatora][07][BIG5][720p][MP4].mp4","wanted":1},{"size":276256,"path":"_____padding_file_6_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":173709712,"path":"[KTXP][RE Hamatora][08][BIG5][720p][MP4].mp4","wanted":1},{"size":353904,"path":"_____padding_file_7_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":186998397,"path":"[KTXP][RE Hamatora][09][BIG5][720p][MP4].mp4","wanted":1},{"size":172419,"path":"_____padding_file_8_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":190285300,"path":"[KTXP][RE Hamatora][10][BIG5][720p][MP4].mp4","wanted":1},{"size":31244,"path":"_____padding_file_9_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":155175370,"path":"[KTXP][RE Hamatora][11][BIG5][720p][MP4].mp4","wanted":1},{"size":13878,"path":"_____padding_file_10_if you see this file, please update to BitComet 0.85 or above____","wanted":-1},{"size":157596708,"path":"[KTXP][RE Hamatora][12][BIG5][720p][MP4].mp4","wanted":1}],"state":true}
         if ret['state'] is False:
-            logging.error('上传种子step.5出错 %s!' % str(ret))
+            logging.error(('上传种子step.5出错 %s!' % str(ret)).decode('utf-8'))
             return False
         #step.6
         #选择需要下载的文件(能下的都下)
@@ -228,7 +228,7 @@ class u115_api:
             logging.error(ret['error_msg'])
             return False
 
-        logging.info('任务 torrent=%s 提交成功' % torrent_file_name)
+        logging.info(('任务 torrent=%s 提交成功' % torrent_file_name).decode('utf-8'))
         return True
         #完成添加操作,将ret['info_hash'] ret['name']更新入数据库
         #m = {'torrent_info_hash' : ret['info_hash'], 'torrent_name' : ret['name']}
@@ -249,13 +249,16 @@ class u115_api:
             else:
                 status = '下载中'
             if self.torrents[i]['file_id'] is not None:
-                print '任务[%s]:%120s  进度:%8s  速度:%10dKB/s  种子:%5s  体积: %5.2f    散列值:%40s' \
+                print ('任务[%s]:%100s  进度:%8s  速度:%10dKB/s  种子:%5s  体积: %5.2fGB    散列值:%40s' \
                       % (status,
-                         self.torrents[i]['name'].encode('utf-8'), str(self.torrents[i]['percentDone']),
-                         self.torrents[i]['rateDownload']/1024.0, str(self.torrents[i]['peers']),
-                         self.torrents[i]['size']/1024.0/1024.0/1024.0, self.torrents[i]['info_hash'].encode('utf-8'))
+                         self.torrents[i]['name'].encode('utf-8'),
+                         str(self.torrents[i]['percentDone']),
+                         self.torrents[i]['rateDownload']/1024.0,
+                         str(self.torrents[i]['peers']),
+                         self.torrents[i]['size']/1024.0/1024.0/1024.0,
+                         self.torrents[i]['info_hash'].encode('utf-8'))).decode('utf-8')
                 total_ratedownload += self.torrents[i]['rateDownload']/1024.0
-        print '---------------------------------总速度:%5.2f MB/s' % (total_ratedownload/1024.0)
+        print ('---------------------------------总速度:%5.2f MB/s' % (total_ratedownload/1024.0)).decode('utf-8')
 
     def add_http_task(self, url):
         self.get_sign()
@@ -266,20 +269,20 @@ class u115_api:
                      'time': self.time}
         resp, ret = self.http.post(post_url, post_data)
         if not resp['status'] == 200:
-            logging.error('任务添加失败:请求失败')
+            logging.error('任务添加失败:请求失败'.decode('utf-8'))
             return False
         ret = json.loads(ret)
         if ret['state'] is False:
             if 'error_msg' in ret:
                 print ret['error_msg']
                 return False
-            logging.error('任务添加失败')
+            logging.error('任务添加失败'.decode('utf-8'))
             return False
-        logging.info('任务 url=%s 提交成功' % url)
+        logging.info(('任务 url=%s 提交成功' % url).decode('utf-8'))
         return True
 
     def auto_make_share_link(self, refresh=True, delfromlist=True):
-     #自动将完成任务生成网盘礼包
+    #自动将完成任务生成网盘礼包
         result = []
         if refresh:
             self.get_bt_task_list()
@@ -297,7 +300,7 @@ class u115_api:
                              'sign': self.sign,
                              'time': self.time}
                 self.http.post(post_url, post_data)
-                logging.info('删除失败的任务:%s' % torrent_name)
+                logging.info(('删除失败的任务:%s' % torrent_name).decode('utf-8'))
                 continue
             if self.torrents[i]['status'] == 2 \
                     and self.torrents[i]['percentDone'] == 100 \
@@ -322,14 +325,13 @@ class u115_api:
                 #115一定是默默地star了我...
                 get_url = 'http://web.api.115.com/files/search?offset=0&limit=30&search_value=%s' \
                 '&date=&aid=-1&pick_code=&type=&source=&format=json' % (torrent_name)
-
                 resp, ret = self.http.get(get_url)
                 if not resp['status'] == 200:
-                    logging.error('%s 创建礼包失败:请求失败' % torrent_name)
+                    logging.error(('%s 创建礼包失败:请求失败' % torrent_name).decode('utf-8'))
                     continue
                 ret = json.loads(ret)
                 if ret['count'] == 0:
-                    logging.error('%s 创建礼包失败,未找到下载任务,请稍后再试' % torrent_name)
+                    logging.info(('%s 创建礼包失败,未找到下载的文件,请稍后再试' % torrent_name).decode('utf-8'))
                     continue
                 pick_code = ret['data'][0]['pc']
                 #创建礼包
@@ -337,11 +339,11 @@ class u115_api:
                 post_data = {'pickcodes[]': pick_code}
                 resp, ret = self.http.post(post_url, post_data)
                 if not resp['status'] == 200:
-                    logging.error('%s 创建礼包失败:请求失败' % torrent_name)
+                    logging.error(('%s 创建礼包失败:请求失败' % torrent_name).decode('utf-8'))
                     continue
                 ret = json.loads(ret)
                 if ret['state'] is False:
-                    logging.error('%s 创建礼包失败:%s' % (torrent_name, ret['message'].encode('utf-8')))
+                    logging.error(('%s 创建礼包失败:%s' % (torrent_name, ret['message'].encode('utf-8'))).decode('utf-8'))
                     continue
                 gift_code = ret['gift_code'].encode('utf-8')
                 #保存礼包名字
@@ -350,12 +352,12 @@ class u115_api:
                              'remark': torrent_name}
                 resp, ret = self.http.post(post_url, post_data)
                 if not resp['status'] == 200:
-                    logging.error('%s 创建礼包失败:请求失败' % torrent_name)
+                    logging.error(('%s 创建礼包失败:请求失败' % torrent_name).decode('utf-8'))
                     continue
                 ret = json.loads(ret)
                 result.append({'Code': gift_code, 'Name': torrent_name})
-                logging.info('生成礼包成功:Code=%s Hash=%s Name=%s' %
-                             (gift_code, self.torrents[i]['info_hash'].encode('utf-8'), torrent_name))
+                logging.info(('生成礼包成功:Code=%s Hash=%s Name=%s' %
+                             (gift_code, self.torrents[i]['info_hash'].encode('utf-8'), torrent_name)).decode('utf-8'))
                 #115从完成列表中删除
                 if delfromlist is True:
                     post_url = BASE_URL + '/lixian/?ct=lixian&ac=task_del'
@@ -367,7 +369,8 @@ class u115_api:
                     #logging.info('删除完成任务:Code=%s Hash=%s Name=%s' %
                     #             (gift_code.encode('utf-8'),
                     #              self.torrents[i]['info_hash'].encode('utf-8'), torrent_name))
-        return ret, result
+        return True, result
+
 if __name__ == "__main__":
     u115 = u115_api()
     u115.login('13125180000', '000000')
@@ -375,5 +378,5 @@ if __name__ == "__main__":
     #u115.print_bt_task_info()
     #u115.add_http_task('http://down.360safe.com/360/inst.exe')
     #u115.add_torrent_task('2.torrent')
-    ret, result = u115.auto_make_share_link()
-    print result
+    #ret, result = u115.auto_make_share_link()
+    #print result
