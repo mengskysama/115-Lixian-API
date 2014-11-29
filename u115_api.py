@@ -305,35 +305,36 @@ class u115_api:
             if self.torrents[i]['status'] == 2 \
                     and self.torrents[i]['percentDone'] == 100 \
                     and self.torrents[i]['move'] == 1:
-                """
+
                 cid = str(self.torrents[i]['file_id'])
-                get_url = 'http://web.api.115.com/category/get?aid=1&cid=%s' % cid
-                resp, ret = self.http.get(get_url)#sometime has bom
-                if not resp['status'] == 200:
-                    logging.error('%s 分享失败:请求失败' % torrent_name)
-                    continue
-                if ret.find('pick_code') < 0:
-                    #此时无bom
-                    logging.error('%s 分享失败:未找到pick_code' % torrent_name)
-                    continue
-                #此时有bom.....................
-                #ret = ret[3:]
-                #妈蛋你们搞来搞去是闹哪样
-                ret = json.loads(ret)
-                pick_code = ret['pick_code'].encode('utf-8')
-                """
-                #115一定是默默地star了我...
-                get_url = 'http://web.api.115.com/files/search?offset=0&limit=30&search_value=%s' \
-                '&date=&aid=-1&pick_code=&type=&source=&format=json' % (torrent_name)
-                resp, ret = self.http.get(get_url)
-                if not resp['status'] == 200:
-                    logging.error(('%s 创建礼包失败:请求失败' % torrent_name).decode('utf-8'))
-                    continue
-                ret = json.loads(ret)
-                if ret['count'] == 0:
-                    logging.info(('%s 创建礼包失败,未找到下载的文件,请稍后再试' % torrent_name).decode('utf-8'))
-                    continue
-                pick_code = ret['data'][0]['pc']
+                if cid != '132111574000449453':
+                    get_url = 'http://web.api.115.com/category/get?aid=1&cid=%s' % cid
+                    resp, ret = self.http.get(get_url)#sometime has bom
+                    if not resp['status'] == 200:
+                        logging.error('%s 分享失败:请求失败' % torrent_name)
+                        continue
+                    if ret.find('pick_code') < 0:
+                        #此时无bom
+                        logging.error('%s 分享失败:未找到pick_code' % torrent_name)
+                        continue
+                    #此时有bom.....................
+                    #ret = ret[3:]
+                    #妈蛋你们搞来搞去是闹哪样
+                    ret = json.loads(ret)
+                    pick_code = ret['pick_code'].encode('utf-8')
+                else:
+                    #115一定是默默地star了我...
+                    get_url = 'http://web.api.115.com/files/search?offset=0&limit=30&search_value=%s' \
+                    '&date=&aid=-1&pick_code=&type=&source=&format=json' % (torrent_name)
+                    resp, ret = self.http.get(get_url)
+                    if not resp['status'] == 200:
+                        logging.error(('%s 创建礼包失败:请求失败' % torrent_name).decode('utf-8'))
+                        continue
+                    ret = json.loads(ret)
+                    if ret['count'] == 0:
+                        logging.info(('%s 创建礼包失败,未找到下载的文件,请稍后再试' % torrent_name).decode('utf-8'))
+                        continue
+                    pick_code = ret['data'][0]['pc']
                 #创建礼包
                 post_url = BASE_URL + '/?ct=filegift&ac=create'
                 post_data = {'pickcodes[]': pick_code}
