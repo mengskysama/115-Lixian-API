@@ -43,18 +43,19 @@ def monitor():
             ret, result = u115.auto_make_share_link()
             for res in result:
                 update_task_success('http://115.com/lb/%s ---- %s' % (res['Code'], res['Name']))
-
-            task_list = readtask()
-            if len(task_list) == 0:
-                logging.info('没有任务文件...zZZ'.decode('utf-8'))
-            else:
-                i = task_list[0]
-                task_list.pop(0)
-                update_task(task_list)
-                if not i.startswith("http"):
+            if 15 > u115.ret_current_bt_task_count():
+                task_list = readtask()
+                if len(task_list) == 0:
+                    logging.info('没有任务文件...zZZ'.decode('utf-8'))
+                else:
+                    i = task_list[0]
+                    task_list.pop(0)
+                    update_task(task_list)
+                    if not i.startswith("http"):
+                        continue
+                    update_task_process(i)
+                    u115.add_http_task(i)
                     continue
-                update_task_process(i)
-                u115.add_http_task(i)
             time.sleep(arg_sleeptime)
         except KeyboardInterrupt:
             break
